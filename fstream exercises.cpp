@@ -8,19 +8,23 @@
 using namespace std;
 
 struct Reading {
-	Reading(int, double);
+	Reading(int, double, char);
 	int hour;
 	double temp;
+	char deg;
 };
-Reading::Reading(int h, double t) {
+Reading::Reading(int h, double t, char d) {
 	hour = h;
 	temp = t;
+	deg = d;
 }
 void fill_reading(vector<Reading>& r, int n) {
 	int h = 0;
 	double t = 10.0;
+	char d;
 	for (int i = 0; i < n; ++i) {
-		r.push_back(Reading(h, t));
+		d = h % 2 == 0 ? 'c' : 'f';
+		r.push_back(Reading(h, t, d));
 		t += .5;
 		if (h + 1 > 23) {
 			h = 0;
@@ -29,7 +33,7 @@ void fill_reading(vector<Reading>& r, int n) {
 	}
 }
 ostream& operator<<(ostream& os, Reading& r) {
-	return os << r.hour << " h: " << r.temp << '\n';
+	return os << r.hour << " h: " << r.temp << ' ' << r.deg << '\n';
 }
 
 int main() {
@@ -48,15 +52,30 @@ int main() {
 	ist.exceptions(ist.exceptions() | ios_base::badbit);
 	int h;
 	double t;
+	char d;
 	char temp, temp2;
 	while (true) {
 		if (ist >> h) {
 			ist >> temp >> temp2;
 			if (ist >> t && temp == 'h' && temp2 == ':') {
-				data.push_back(Reading(h, t));
+				if (ist >> d && (d == 'c' || d == 'f')) {
+					if (d == 'c') {
+						t = (t * double(9)/5) + 32;
+						data.push_back(Reading(h, t, d));
+					}
+					else {
+						data.push_back(Reading(h, t, d));
+					}
+				}
+				else {
+					cout << "Error! (1)\n";
+					ist.unget();
+					ist.clear(ios_base::failbit);
+					return -1;
+				}
 			}
 			else {
-				cout << "Error! (1)\n";
+				cout << "Error! (2)\n";
 				ist.unget();
 				ist.clear(ios_base::failbit);
 				return -1;
@@ -64,7 +83,7 @@ int main() {
 		}
 		else if (ist.eof()) break;
 		else {
-			cout << "Error! (2)\n";
+			cout << "Error! (3)\n";
 			ist.unget();
 			ist.clear(ios_base::failbit);
 			return -1;
